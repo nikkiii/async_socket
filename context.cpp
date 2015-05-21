@@ -5,6 +5,14 @@ AsyncSocketContext::AsyncSocketContext(IPluginContext* pContext) {
 }
 
 AsyncSocketContext::~AsyncSocketContext() {
+	if (connect_req != NULL) {
+		free(connect_req);
+	}
+
+	if (socket != NULL) {
+		uv_close((uv_handle_t *) socket, NULL);
+	}
+
 	if (connectCallback) {
 		forwards->ReleaseForward(connectCallback);
 	}

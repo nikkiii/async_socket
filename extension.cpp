@@ -73,16 +73,6 @@ void AsyncSocket::OnHandleDestroy(HandleType_t type, void *object) {
 	if(object != NULL) {
 		AsyncSocketContext *ctx = (AsyncSocketContext *) object;
 
-		if (ctx->connect_req != NULL) {
-			uv_close((uv_handle_t *) ctx->connect_req->handle, NULL);
-			free(ctx->connect_req);
-		}
-
-		if (ctx->socket != NULL) {
-			uv_close((uv_handle_t *) ctx->socket, NULL);
-			free(ctx->socket);
-		}
-
 		delete ctx;
 	}
 }
@@ -134,11 +124,8 @@ void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
 
 void on_read(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
 	if (nread < 0) {
-		if (nread != UV_EOF) {
-			push_error((AsyncSocketContext*) client->data, nread);
-		}
-		//uv_close((uv_handle_t*) client, NULL);
-		//free(client);
+		push_error((AsyncSocketContext*) client->data, nread);
+		// Should we decide to close the socket? For now let's let the plugin handle errors, including EOF.
 		return;
 	}
 
