@@ -6,14 +6,14 @@
 #endif
 #define _async_socket_included
 
-typedef AsyncSocketConnectCallback = function void(Socket socket);
+typedef AsyncSocketConnectCallback = function void(AsyncSocket socket);
 
-typedef AsyncSocketErrorCallback = function void(Socket socket, int error, const char[] errorName);
+typedef AsyncSocketErrorCallback = function void(AsyncSocket socket, int error, const char[] errorName);
 
-typedef AsyncSocketDataCallback = function void(Socket socket, const char[] data, const int size);
+typedef AsyncSocketDataCallback = function void(AsyncSocket socket, const char[] data, const int size);
 
-methodmap Socket < Handle {
-	public native Socket();
+methodmap AsyncSocket < Handle {
+	public native AsyncSocket();
 	
 	public native bool Connect(const char[] host, const int port);
 	

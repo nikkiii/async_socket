@@ -79,6 +79,7 @@ void AsyncSocket::OnHandleDestroy(HandleType_t type, void *object) {
 		}
 
 		if (ctx->socket != NULL) {
+			uv_close((uv_handle_t *) ctx->socket, NULL);
 			free(ctx->socket);
 		}
 
@@ -336,6 +337,8 @@ void async_write(uv_async_t *handle) {
 
 	uv_write_t req;
 	uv_write(&req, data->ctx->connect_req->handle, &data->buf, 1, NULL);
+
+	uv_close((uv_handle_t *) &data->buf, NULL);
 
 	free(data->buf.base);
 	free(data);
