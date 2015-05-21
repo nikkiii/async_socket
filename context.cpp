@@ -2,10 +2,10 @@
 
 AsyncSocketContext::AsyncSocketContext(IPluginContext* pContext) {
 	this->pContext = pContext;
-	
-	connectCallback = forwards->CreateForwardEx(NULL, ET_Single, 1, NULL, Param_Cell);
-	errorCallback = forwards->CreateForwardEx(NULL, ET_Single, 3, NULL, Param_Cell, Param_Cell, Param_String);
-	dataCallback = forwards->CreateForwardEx(NULL, ET_Single, 3, NULL, Param_Cell, Param_String, Param_Cell);
+
+	connectCallback = NULL;
+	errorCallback = NULL;
+	dataCallback = NULL;
 }
 
 AsyncSocketContext::~AsyncSocketContext() {
@@ -62,13 +62,28 @@ void AsyncSocketContext::OnData(char* data, ssize_t size) {
 }
 
 bool AsyncSocketContext::SetConnectCallback(funcid_t function) {
+	if (connectCallback) {
+		forwards->ReleaseForward(connectCallback);
+	}
+	
+	connectCallback = forwards->CreateForwardEx(NULL, ET_Single, 1, NULL, Param_Cell);
 	return connectCallback->AddFunction(pContext, function);
 }
 
 bool AsyncSocketContext::SetErrorCallback(funcid_t function) {
+	if (connectCallback) {
+		forwards->ReleaseForward(errorCallback);
+	}
+
+	errorCallback = forwards->CreateForwardEx(NULL, ET_Single, 3, NULL, Param_Cell, Param_Cell, Param_String);
 	return errorCallback->AddFunction(pContext, function);
 }
 
 bool AsyncSocketContext::SetDataCallback(funcid_t function) {
+	if (dataCallback) {
+		forwards->ReleaseForward(dataCallback);
+	}
+	
+	dataCallback = forwards->CreateForwardEx(NULL, ET_Single, 3, NULL, Param_Cell, Param_String, Param_Cell);
 	return dataCallback->AddFunction(pContext, function);
 }

@@ -72,7 +72,7 @@ AsyncSocketContext* AsyncSocket::GetSocketInstanceByHandle(Handle_t handle) {
 void AsyncSocket::OnHandleDestroy(HandleType_t type, void *object) {
 	if(object != NULL) {
 		AsyncSocketContext *ctx = (AsyncSocketContext *) object;
-		UV_EOF;
+
 		delete ctx;
 	}
 }
