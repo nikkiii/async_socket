@@ -44,7 +44,7 @@
 
 struct socket_write_t {
 	AsyncSocketContext *ctx;
-	uv_buf_t buf;
+	uv_buf_t* buf;
 };
 
 struct socket_data_t {

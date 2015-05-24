@@ -1,2 +1,3 @@
-msvc*/*
-libs/*
+extension/msvc*/*
+extension/libs/*
+build/*

@@ -3,6 +3,8 @@
 AsyncSocketContext::AsyncSocketContext(IPluginContext* pContext) {
 	this->pContext = pContext;
 
+	stream = NULL;
+
 	connectCallback = NULL;
 	errorCallback = NULL;
 	dataCallback = NULL;

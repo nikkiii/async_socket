@@ -22,6 +22,7 @@ public:
 	uv_getaddrinfo_t resolver;
 	uv_connect_t* connect_req;
 	uv_tcp_t* socket;
+	uv_stream_t* stream;
 
     AsyncSocketContext(IPluginContext* plugin);
     ~AsyncSocketContext();

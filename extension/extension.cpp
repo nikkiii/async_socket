@@ -147,18 +147,23 @@ void on_read(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
 }
 
 void on_connect(uv_connect_t *req, int status) {
+	AsyncSocketContext *ctx = (AsyncSocketContext*) req->data;
+
 	if (status < 0) {
-		push_error((AsyncSocketContext*) req->data, status);
+		push_error(ctx, status);
 		return;
 	}
 
+	ctx->connect_req = NULL;
+	ctx->stream = req->handle;
+
 	g_connect_queue.Lock();
-	g_connect_queue.Push((AsyncSocketContext*) req->data);
+	g_connect_queue.Push(ctx);
 	g_connect_queue.Unlock();
 
 	req->handle->data = req->data;
 
-	uv_read_start((uv_stream_t*) req->handle, alloc_buffer, on_read);
+	uv_read_start(ctx->stream, alloc_buffer, on_read);
 }
 
 void push_error(AsyncSocketContext *ctx, int error) {
@@ -173,12 +178,12 @@ void push_error(AsyncSocketContext *ctx, int error) {
 }
 
 void on_resolved(uv_getaddrinfo_t *resolver, int status, struct addrinfo *res) {
+	AsyncSocketContext *ctx = (AsyncSocketContext *) resolver->data;
+
 	if (status < 0) {
-		push_error((AsyncSocketContext *) resolver->data, status);
+		push_error(ctx, status);
 		return;
 	}
-
-	AsyncSocketContext *ctx = static_cast<AsyncSocketContext *>(resolver->data);
 
 	uv_connect_t *connect_req = (uv_connect_t*) malloc(sizeof(uv_connect_t));
 	uv_tcp_t *socket = (uv_tcp_t*) malloc(sizeof(uv_tcp_t));
@@ -239,10 +244,10 @@ cell_t Socket_Write(IPluginContext *pContext, const cell_t *params) {
 	char *data = NULL;
 	pContext->LocalToString(params[2], &data);
 
-	uv_buf_t buffer;
+	uv_buf_t* buffer = (uv_buf_t *) malloc(sizeof(uv_buf_t));
 
-	buffer.base = strdup(data);
-	buffer.len = strlen(data);
+	buffer->base = strdup(data);
+	buffer->len = strlen(data);
 
 	socket_write_t *write = (socket_write_t *) malloc(sizeof(socket_write_t));
 
@@ -319,14 +324,36 @@ void async_resolve(uv_async_t *handle) {
 	}
 }
 
+void async_write_cb(uv_write_t* req, int status) {
+	socket_write_t *data = (socket_write_t *) req->data;
+
+	if (data->buf->base) {
+		free(data->buf->base);
+	}
+
+	free(data->buf);
+
+	free(data);
+
+	free(req);
+}
+
 void async_write(uv_async_t *handle) {
 	socket_write_t *data = (socket_write_t *) handle->data;
 
-	uv_write_t req;
-	uv_write(&req, data->ctx->connect_req->handle, &data->buf, 1, NULL);
+	if (data == NULL || data->buf == NULL) {
+		return;
+	}
 
-	free(data->buf.base);
-	free(data);
+	if (data->ctx == NULL || data->ctx->stream == NULL) {
+		return;
+	}
+
+	uv_write_t* req = (uv_write_t *) malloc(sizeof(uv_write_t));
+
+	req->data = data;
+
+	uv_write(req, data->ctx->stream, data->buf, 1, async_write_cb);
 }
 
 // Sourcemod Plugin Events
